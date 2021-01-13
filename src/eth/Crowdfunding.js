@@ -182,6 +182,11 @@ const abi = [
 		"name": "getProject",
 		"outputs": [
 			{
+				"internalType": "uint256",
+				"name": "pid",
+				"type": "uint256"
+			},
+			{
 				"internalType": "string",
 				"name": "title",
 				"type": "string"
@@ -220,6 +225,16 @@ const abi = [
 				"internalType": "bool",
 				"name": "isVoting",
 				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "time",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "numOfVoters",
+				"type": "uint256"
 			}
 		],
 		"payable": false,
@@ -285,6 +300,6 @@ const abi = [
 	}
 ]
 
-let address = "0x1ffA68A8E2728484ae7631feC205Cf245A4dbAa0"
+let address = "0x2BFc302688e658EF490c1A9Ee3f767b44923A971"
 let contractInstance = new web3.eth.Contract(abi, address)
 export default contractInstance;

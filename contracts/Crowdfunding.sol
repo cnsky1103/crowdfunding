@@ -11,7 +11,7 @@ contract Crowdfunding {
         string title;
         uint256 usage;
         uint256 deadline;
-        uint256[] agree;
+        mapping(uint256 => uint256) agree;
         uint256 numOfVoters;
     }
 
@@ -69,14 +69,8 @@ contract Crowdfunding {
         returns (bool reached)
     {
         Project storage p = projects[_pid];
-        if (p.amount < p.goal) {
-            return false;
-        }
-        //uint256 amount = p.amount;
-        //p.amount = 0;
-        //p.owner.transfer(amount);
-        p.isFinished = true;
-        return true;
+        p.isFinished = p.amount >= p.goal;
+        return p.isFinished;
     }
 
     function refund(uint256 _pid) public payable {
@@ -95,21 +89,23 @@ contract Crowdfunding {
     ) public {
         Project storage p = projects[_pid];
         require(p.amount > 0); //still have money to use
+        require(p.isFinished);
         p.isVoting = true;
         p.vote.title = _title;
         p.vote.usage = _usage;
         p.vote.deadline = _deadline;
+        p.vote.numOfVoters = 0;
     }
 
     function vote(uint256 _pid) public {
         Project storage p = projects[_pid];
         uint256 i = 0;
-        for (; i < p.numOfFunders; ++i) {
+        for (i = 0; i < p.numOfFunders; ++i) {
             if (p.funders[i].addr == msg.sender) break;
         }
-        p.vote.numOfVoters++;
         p.vote.agree[p.vote.numOfVoters] = i;
-        checkVoteAgreed(_pid);
+        p.vote.numOfVoters++;
+        //checkVoteAgreed(_pid);
     }
 
     function checkVoteAgreed(uint256 _pid) public returns (bool reached) {
@@ -119,7 +115,7 @@ contract Crowdfunding {
             sum += p.funders[p.vote.agree[i]].amount;
         }
         if (2 * sum >= p.goal) {
-            p.amount -= sum;
+            p.amount -= p.vote.usage;
             p.isVoting = false;
             p.owner.transfer(sum);
             return true;
@@ -131,6 +127,7 @@ contract Crowdfunding {
         public
         view
         returns (
+            uint256 pid,
             string memory title,
             uint256 goal,
             uint256 amount,
@@ -138,11 +135,14 @@ contract Crowdfunding {
             uint256 numOfFunders,
             uint256 deadline,
             bool isFinished,
-            bool isVoting
+            bool isVoting,
+            uint256 time,
+            uint256 numOfVoters
         )
     {
         Project storage p = projects[_pid];
         return (
+            _pid,
             p.title,
             p.goal,
             p.amount,
@@ -150,7 +150,9 @@ contract Crowdfunding {
             p.numOfFunders,
             p.deadline,
             p.isFinished,
-            p.isVoting
+            p.isVoting,
+            block.timestamp,
+            p.vote.numOfVoters
         );
     }
 
